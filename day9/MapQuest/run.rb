@@ -1,4 +1,3 @@
-require_relative 'MapQuest'
-require './APIs'
-client = MapQuest::Client.new(api_key)
-# client.get_batch(["Denver,CO"])
+require_relative "./MapQuest"
+require_relative "./APIs"
+MapQuest::Address.new.get_address('Denver,CO')
