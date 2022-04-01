@@ -21,16 +21,19 @@ module MapQuest
                 elsif method.downcase == "post"
                     res = Faraday.post(api, params)
                 end
-                
+                # res.status = 500
                 if res.status == 403
                     raise " Wrong API, please check and try again "
                 end
                 puts res.status
                 ## Converting to hash because res.status gives 200 except 403
+                 
                 res_hash = JSON.parse(res.body)
+                res_hash["info"]["statuscode"] = 503
                 if res_hash["info"]["statuscode"]/100 ==4
                     raise "Wrong Location, Please check and try again"
                 end
+                
                 if res_hash["info"]["statuscode"]/100 ==5
                     raise "5"
                 end
