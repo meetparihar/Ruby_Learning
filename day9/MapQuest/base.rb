@@ -12,45 +12,30 @@ module MapQuest
             begin                
                 params = {
                     'key' => @@key,
-                    # 'location' => location 
+                    'location' => location 
                 }
-                # res = nil
                 if method.downcase == "get"                    
                     res = Faraday.get(api, params)                    
                     # puts res.status
                 elsif method.downcase == "post"
                     res = Faraday.post(api, params)
                 end
-                # res.status = 500
-                if res.status == 403
-                    raise " Wrong API, please check and try again "
-                end
-                puts res.status
-                ## Converting to hash because res.status gives 200 except 403
-                 
                 res_hash = JSON.parse(res.body)
-                res_hash["info"]["statuscode"] = 503
-                if res_hash["info"]["statuscode"]/100 ==4
-                    raise "Wrong Location, Please check and try again"
-                end
-                
-                if res_hash["info"]["statuscode"]/100 ==5
-                    raise "5"
+                statuscode = res_hash["info"]["statuscode"]
+
+                if res.status == 200 && statuscode == 200
+                    return res.body
+                else
+                    ## check statuscode
+                    ## instead of raising do retry here
+                    raise statuscode 
                 end
             rescue Exception => e
-                if(e.message=="5")
-                    if retries < 3
-                        retries += 1
-                        puts "retrying.."
-                        sleep(2) 
-                        retry
-                    else
-                        raise e
-                    end
+                if e.message = 400
+                    return "puts error 400"
                 end
-                puts e.message           
-                        
-            end
+                else 
+
             return res
         end
     end
