@@ -5,14 +5,10 @@ module MapQuest
     class Batch < Base
         def get_batch(locations)
             location = ""
-            locations = ['hello', 'there', 'why']
             for loc in locations
-                location.concat("#{loc}")
-            end            
-            # param = {
-            #     'key' => '9ZfHSq27ctwyAuobTZbVNp0APZUruXcf'
-            #     'location' => '[{"location" => ["Washington,DC"]}, {"location" => ["Boulder,CO"]}]'
-            # }
+                location.concat("&location=#{loc}")
+            end
+            # puts "http://www.mapquestapi.com/geocoding/v1/batch?key=#{API_KEY}#{location}"
             res = Faraday.get("http://www.mapquestapi.com/geocoding/v1/batch?key=#{API_KEY}#{location}")
             puts res.body
         end
@@ -26,4 +22,4 @@ module MapQuest
         end
     end
 end
-# MapQuest::Batch.new.get_batch(['Boulder,CO', 'Washington,DC'])
+MapQuest::Batch.new.get_batch(['Boulder,CO', 'Washington,DC'])

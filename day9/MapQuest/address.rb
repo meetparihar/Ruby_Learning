@@ -3,10 +3,10 @@ require_relative './base'
 module MapQuest
     class Address < Base
         def get_address(location)
-            self.make_request('get', location, FORWARD_API).body           
+            puts self.make_request('get', location, FORWARD_API)         
         end
         def post_address(location) 
-            self.make_request('post', location, FORWARD_API).body
+            puts self.make_request('post', location, FORWARD_API)
 
         end
     end

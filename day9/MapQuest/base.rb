@@ -2,68 +2,54 @@ require_relative './APIs'
 require 'json'
 require 'faraday'
 require 'faraday/net_http'
-# require 'pry'
 module MapQuest
     class Base
         attr_reader :key        
         @@key = API_KEY
-        def make_request(method, location, api)
+        def make_request(method, location, api, total_retry = 3, wait_time = 10)
             retries = 0
-            begin                
-                params = {
-                    'key' => @@key,
-                    'location' => location 
-                }
-                if method.downcase == "get"                    
-                    res = Faraday.get(api, params)                    
-                    # puts res.status
-                elsif method.downcase == "post"
-                    res = Faraday.post(api, params)
-                end
-                res_hash = JSON.parse(res.body)
-                statuscode = res_hash["info"]["statuscode"]
-
-                if res.status == 200 && statuscode == 200
-                    return res.body
+            begin
+                if method.downcase == "get"                     
+                    params = {
+                        'key' => @@key,
+                        'location' => location 
+                    }
+                    res = Faraday.get(api, params)
+                  
                 else
-                    ## check statuscode
-                    ## instead of raising do retry here
-                    raise statuscode 
+                    con = Faraday.new(FORWARD_API) 
+                    res = con.post do |req|
+                        req.url FORWARD_API
+                        req.params['key'] = API_KEY
+                        req.body = {"location" => "#{location}"}
+                    end
                 end
-            rescue Exception => e
-                if e.message = 400
-                    return "puts error 400"
-                end
-                else 
 
-            return res
+                if res.status == 403  #Handling key related error because doen't with res.body
+                    return 'Key Related Error'
+                end
+                
+                statuscode = JSON.load(res.body)["info"]["statuscode"]
+                puts statuscode
+                case statuscode
+                when 0 
+                    res.body
+                when 400 
+                    'Input error'
+                when 500
+                    'Unknown error'
+                end
+            rescue Faraday::Error => e #catches all the types of network error
+                if retries < Total_retry
+                    retries += 1
+                    sleep(Wait_time)
+                    puts 'Retrying...'
+                    retry
+                else
+                    'Not able to connect'
+                end
+            end            
         end
     end
 end
-# res = MapQuest::Base.new.make_request("post","Denver,CO",FORWARD_API)
-# puts res.body
-# rescue Exception => e
-            #     puts e.message
-            #     # if retries < 3
-            #     #     retries += 1
-            #     #     puts "retrying.."
-            #     #     sleep(2) 
-            #     #     retry
-            #     # else
-            #     #     raise e
-            #     # end
-            # end
-# ## How to get status of res if error occured
-# retries = 0
-# begin
-#     # retries = 0
-#     if retries == 0
-#         raise "Retries is 0"
-#     else
-#         puts " Program ran successfully"
-#     end    
-# rescue StandardError => e
-#     retries += 1
-#     puts "retrying..."
-#     retry
-# end
+
